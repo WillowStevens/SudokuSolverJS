@@ -2,7 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const boardElement = document.getElementById('sudoku-board');
     const solveButton = document.getElementById('solve-button');
     const resetButton = document.getElementById('reset-button');
-    
+
     // Create the Sudoku grid
     for (let i = 0; i < 9; i++) {
         const row = document.createElement('tr');
@@ -26,8 +26,77 @@ document.addEventListener('DOMContentLoaded', () => {
     function validateInput(event) {
         const input = event.target;
         const value = input.value;
+
+        // Remove any existing invalid class from all inputs
+        clearInvalidInputs();
+
         if (!/^[1-9]$/.test(value)) {
             input.value = '';  // Clear the input if it's not a digit between 1 and 9
+        } else {
+            const board = readBoard();
+            const cell = input.parentElement;
+            const row = cell.parentElement;
+            const rowIndex = Array.from(row.parentElement.children).indexOf(row);
+            const cellIndex = Array.from(row.children).indexOf(cell);
+
+            // Temporarily clear the cell to avoid false positives in validation
+            board[rowIndex][cellIndex] = 0;
+
+            if (!isValid(board, rowIndex, cellIndex, parseInt(value))) {
+                input.classList.add('invalid-input');
+            } else {
+                // Restore the value in the board
+                board[rowIndex][cellIndex] = parseInt(value);
+            }
+
+            // Check for conflicts in the row, column, and box
+            highlightConflicts(board, rowIndex, cellIndex, parseInt(value));
+        }
+    }
+
+    function highlightConflicts(board, row, col, num) {
+        const rows = boardElement.querySelectorAll('tr');
+
+        // Check row and column conflicts
+        for (let i = 0; i < 9; i++) {
+            if (i !== col && board[row][i] === num) {
+                rows[row].children[i].querySelector('input').classList.add('invalid-input');
+            }
+            if (i !== row && board[i][col] === num) {
+                rows[i].children[col].querySelector('input').classList.add('invalid-input');
+            }
+        }
+
+        // Check 3x3 box conflicts
+        const startRow = Math.floor(row / 3) * 3;
+        const startCol = Math.floor(col / 3) * 3;
+        for (let i = startRow; i < startRow + 3; i++) {
+            for (let j = startCol; j < startCol + 3; j++) {
+                if ((i !== row || j !== col) && board[i][j] === num) {
+                    rows[i].children[j].querySelector('input').classList.add('invalid-input');
+                }
+            }
+        }
+    }
+
+    function clearInvalidInputs() {
+        const inputs = boardElement.querySelectorAll('input');
+        inputs.forEach(input => {
+            input.classList.remove('invalid-input');
+        });
+        const board = readBoard();
+        // Revalidate the entire board to maintain invalid states
+        for (let row = 0; row < 9; row++) {
+            for (let col = 0; col < 9; col++) {
+                if (board[row][col] !== 0) {
+                    const num = board[row][col];
+                    board[row][col] = 0;
+                    if (!isValid(board, row, col, num)) {
+                        boardElement.querySelectorAll('tr')[row].children[col].querySelector('input').classList.add('invalid-input');
+                    }
+                    board[row][col] = num;
+                }
+            }
         }
     }
 
@@ -55,6 +124,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 rows[i].children[j].classList.add('highlight-box');
             }
         }
+
+        // If the input is invalid, keep the invalid-input class
+        if (input.classList.contains('invalid-input')) {
+            setTimeout(() => {
+                input.classList.add('invalid-input');
+            }, 0);
+        }
     }
 
     function handleBlur(event) {
@@ -80,6 +156,13 @@ document.addEventListener('DOMContentLoaded', () => {
             for (let j = startCol; j < startCol + 3; j++) {
                 rows[i].children[j].classList.remove('highlight-box');
             }
+        }
+
+        // Re-apply invalid-input class if needed
+        if (input.classList.contains('invalid-input')) {
+            setTimeout(() => {
+                input.classList.add('invalid-input');
+            }, 0);
         }
     }
 
@@ -165,6 +248,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const inputs = boardElement.querySelectorAll('input');
         inputs.forEach(input => {
             input.value = '';
+            input.classList.remove('invalid-input');
         });
     }
 });
