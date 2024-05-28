@@ -53,6 +53,7 @@ The Sudoku solver uses a backtracking algorithm to find a valid solution. Hereâ€
 ## Future Improvements
 
 - **Solve Visualization**: Help the user understand how the algorithm works by visualizing the solving process.
+- **Optimizations**: Improve the efficiency of the backtracking algorithm with ideas such as Constraint Propagation, and Early Termination.
 
 ## License
 
