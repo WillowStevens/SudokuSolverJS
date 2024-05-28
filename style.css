@@ -97,3 +97,7 @@ td:nth-child(1) {
 .highlight-box input {
     background-color: #cce5ff;
 }
+/* Invalid input class with higher specificity */
+td input.invalid-input {
+    background-color: #ffcccc !important;
+}
